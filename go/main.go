@@ -17,6 +17,12 @@ type Cell struct {
 	ConnectsTo []Coords
 }
 
+func NewCell() Cell {
+	return Cell{
+		ConnectsTo: make([]Coords, 0, 4),
+	}
+}
+
 func (c *Cell) ToJS() js.Value {
 	var jsCt []interface{}
 	for _, ct := range c.ConnectsTo {
@@ -60,7 +66,7 @@ func genMaze(width, height int) Maze {
 		cells[x] = make([]Cell, height)
 
 		for y := 0; y < height; y++ {
-			cells[x][y] = Cell{}
+			cells[x][y] = NewCell()
 		}
 	}
 
@@ -72,12 +78,14 @@ func genMaze(width, height int) Maze {
 	start := Coords{rand.Intn(width), rand.Intn(height)}
 	stack := []Coords{start}
 
+	unvisitedNeighbors := make([]Coords, 0, 4)
+
 	for len(stack) > 0 {
 		c := stack[len(stack)-1]
 
 		visited[c.X][c.Y] = true
 
-		var unvisitedNeighbors []Coords
+		unvisitedNeighbors = unvisitedNeighbors[:0]
 		for _, d := range []Coords{{-1, 0}, {1, 0}, {0, -1}, {0, 1}} {
 			newX := c.X + d.X
 			newY := c.Y + d.Y
