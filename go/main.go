@@ -54,11 +54,7 @@ func (m *Maze) ToJS() js.Value {
 	return result
 }
 
-func genMazeGo(args []js.Value) {
-	width := args[0].Int()
-	height := args[1].Int()
-	callback := args[2]
-
+func genMaze(width, height int) Maze {
 	cells := make([][]Cell, width)
 	for x := 0; x < width; x++ {
 		cells[x] = make([]Cell, height)
@@ -108,17 +104,36 @@ func genMazeGo(args []js.Value) {
 		}
 	}
 
-	maze := Maze{
+	return Maze{
 		Width:  width,
 		Height: height,
 		Cells:  cells,
 	}
+}
+
+func genMazeGo(args []js.Value) {
+	width := args[0].Int()
+	height := args[1].Int()
+	callback := args[2]
+
+	maze := genMaze(width, height)
 
 	callback.Invoke(maze.ToJS())
 }
 
+func genMazeGoSilent(args []js.Value) {
+	width := args[0].Int()
+	height := args[1].Int()
+	callback := args[2]
+
+	_ = genMaze(width, height)
+
+	callback.Invoke(js.ValueOf("done"))
+}
+
 func registerCallbacks() {
 	js.Global().Set("genMazeGo", js.NewCallback(genMazeGo))
+	js.Global().Set("genMazeGoSilent", js.NewCallback(genMazeGoSilent))
 }
 
 func main() {
