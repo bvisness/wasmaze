@@ -27,7 +27,7 @@
 
 		const go = new Go();
 		let mod, inst;
-		WebAssembly.instantiateStreaming(fetch("lib.wasm"), go.importObject).then(async (result) => {
+		WebAssembly.instantiateStreaming(fetch("libgo.wasm"), go.importObject).then(async (result) => {
 			mod = result.module;
 			inst = result.instance;
 			await go.run(inst);
@@ -42,21 +42,33 @@
 	</script>
 
 	<button id="gen-button-js">Generate with JS</button>
+	<button id="gen-button-go">Generate with Go</button>
 	<span id="timing-result"></span>
 
 	<pre id="maze-view"></pre>
 	
 	<script>
+		const size = 60;
+
 		function updateTimeDisplay(start, end) {
 			document.querySelector('#timing-result').innerHTML = (end - start) + 'ms';
 		}
 
 		document.querySelector('#gen-button-js').addEventListener('click', () => {
 			const start = performance.now();
-			genMazeJS(1000, 1000, maze => {
+			genMazeJS(size, size, maze => {
 				const end = performance.now();
 				updateTimeDisplay(start, end);
-				// document.querySelector('#maze-view').innerHTML = mazeToText(maze);
+				document.querySelector('#maze-view').innerHTML = mazeToText(maze);
+			});
+		});
+
+		document.querySelector('#gen-button-go').addEventListener('click', () => {
+			const start = performance.now();
+			genMazeGo(size, size, maze => {
+				const end = performance.now();
+				updateTimeDisplay(start, end);
+				document.querySelector('#maze-view').innerHTML = mazeToText(maze);
 			});
 		});
 	</script>
