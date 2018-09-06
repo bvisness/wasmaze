@@ -38,7 +38,7 @@ function genArray(width, height, valueFunc) {
   return result;
 }
 
-function genMazeJS(width, height) {
+function genMazeJS(width, height, callback) {
   const cells = genArray(width, height, () => ({ connectsTo: [] }));
 
   const start = [randomInt(0, width), randomInt(0, height)];
@@ -86,11 +86,11 @@ function genMazeJS(width, height) {
     }
   }
 
-  return {
+  callback({
     width,
     height,
     cells,
-  };
+  });
 }
 
 function printMazeOne(maze) {
