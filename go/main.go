@@ -1,32 +1,19 @@
 package main
 
 import (
-	"math/rand"
 	"syscall/js"
+
+	"./maze"
 )
 
-type Coords struct {
-	X, Y int
-}
-
-func (c *Coords) ToJS() js.Value {
+func CoordsToJS(c *maze.Coords) js.Value {
 	return js.ValueOf([]interface{}{c.X, c.Y})
 }
 
-type Cell struct {
-	ConnectsTo []Coords
-}
-
-func NewCell() Cell {
-	return Cell{
-		ConnectsTo: make([]Coords, 0, 4),
-	}
-}
-
-func (c *Cell) ToJS() js.Value {
+func CellToJS(c *maze.Cell) js.Value {
 	var jsCt []interface{}
 	for _, ct := range c.ConnectsTo {
-		jsCt = append(jsCt, ct.ToJS())
+		jsCt = append(jsCt, CoordsToJS(&ct))
 	}
 
 	return js.ValueOf(map[string]interface{}{
@@ -34,18 +21,13 @@ func (c *Cell) ToJS() js.Value {
 	})
 }
 
-type Maze struct {
-	Width, Height int
-	Cells         [][]Cell
-}
-
-func (m *Maze) ToJS() js.Value {
+func MazeToJS(m *maze.Maze) js.Value {
 	cells := make([]interface{}, m.Width)
 	for x := 0; x < m.Width; x++ {
 		col := make([]interface{}, m.Height)
 
 		for y := 0; y < m.Height; y++ {
-			col[y] = m.Cells[x][y].ToJS()
+			col[y] = CellToJS(&m.Cells[x][y])
 		}
 
 		cells[x] = col
@@ -60,73 +42,14 @@ func (m *Maze) ToJS() js.Value {
 	return result
 }
 
-func genMaze(width, height int) Maze {
-	cells := make([][]Cell, width)
-	for x := 0; x < width; x++ {
-		cells[x] = make([]Cell, height)
-
-		for y := 0; y < height; y++ {
-			cells[x][y] = NewCell()
-		}
-	}
-
-	visited := make([][]bool, width)
-	for x := 0; x < width; x++ {
-		visited[x] = make([]bool, height)
-	}
-
-	start := Coords{rand.Intn(width), rand.Intn(height)}
-	stack := []Coords{start}
-
-	unvisitedNeighbors := make([]Coords, 0, 4)
-
-	for len(stack) > 0 {
-		c := stack[len(stack)-1]
-
-		visited[c.X][c.Y] = true
-
-		unvisitedNeighbors = unvisitedNeighbors[:0]
-		for _, d := range []Coords{{-1, 0}, {1, 0}, {0, -1}, {0, 1}} {
-			newX := c.X + d.X
-			newY := c.Y + d.Y
-
-			if newX < 0 || newX >= width || newY < 0 || newY >= height || visited[newX][newY] {
-				continue
-			} else {
-				unvisitedNeighbors = append(unvisitedNeighbors, Coords{newX, newY})
-			}
-		}
-
-		if len(unvisitedNeighbors) > 0 {
-			n := unvisitedNeighbors[rand.Intn(len(unvisitedNeighbors))]
-
-			currentCell := &cells[c.X][c.Y]
-			currentCell.ConnectsTo = append(currentCell.ConnectsTo, n)
-
-			neighborCell := &cells[n.X][n.Y]
-			neighborCell.ConnectsTo = append(neighborCell.ConnectsTo, c)
-
-			stack = append(stack, n)
-		} else {
-			stack = stack[:len(stack)-1]
-		}
-	}
-
-	return Maze{
-		Width:  width,
-		Height: height,
-		Cells:  cells,
-	}
-}
-
 func genMazeGo(args []js.Value) {
 	width := args[0].Int()
 	height := args[1].Int()
 	callback := args[2]
 
-	maze := genMaze(width, height)
+	maze := maze.GenMaze(width, height)
 
-	callback.Invoke(maze.ToJS())
+	callback.Invoke(MazeToJS(&maze))
 }
 
 func genMazeGoSilent(args []js.Value) {
@@ -134,7 +57,7 @@ func genMazeGoSilent(args []js.Value) {
 	height := args[1].Int()
 	callback := args[2]
 
-	_ = genMaze(width, height)
+	_ = maze.GenMaze(width, height)
 
 	callback.Invoke(js.ValueOf("done"))
 }
