@@ -1,9 +1,4 @@
 <!doctype html>
-<!--
-Copyright 2018 The Go Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
-license that can be found in the LICENSE file.
--->
 <html>
 
 <head>
@@ -13,9 +8,11 @@ license that can be found in the LICENSE file.
 	<style>
 		#maze-view {
 			font-size: 5px;
-			letter-spacing: 1em;
+			letter-spacing: 0.7em;
 		}
 	</style>
+
+	<script src="js/maze.js"></script>
 </head>
 
 <body>
@@ -44,11 +41,28 @@ license that can be found in the LICENSE file.
 		}
 	</script>
 
-	<button id="gen-button">Generate</button>
+	<button id="gen-button-js">Generate with JS</button>
+	<span id="timing-result"></span>
 
 	<pre id="maze-view"></pre>
+	
+	<script>
+		function time(func) {
+			const start = performance.now();
+			func();
+			const end = performance.now();
 
-	<script src="js/maze.js"></script>
+			document.querySelector('#timing-result').innerHTML = (end - start) + 'ms';
+		}
+
+		document.querySelector('#gen-button-js').addEventListener('click', () => {
+			let maze = null;
+			time(() => {
+				maze = genMazeJS(1000, 1000);
+			});
+			// document.querySelector('#maze-view').innerHTML = mazeToText(maze);
+		});
+	</script>
 </body>
 
 </html>

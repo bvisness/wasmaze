@@ -38,7 +38,7 @@ function genArray(width, height, valueFunc) {
   return result;
 }
 
-function genMaze(width, height) {
+function genMazeJS(width, height) {
   const cells = genArray(width, height, () => ({ connectsTo: [] }));
 
   const start = [randomInt(0, width), randomInt(0, height)];
@@ -161,8 +161,3 @@ function mazeToText(maze) {
 
   return result;
 }
-
-document.querySelector('#gen-button').addEventListener('click', () => {
-  const maze = genMaze(50, 50);
-  document.querySelector('#maze-view').innerHTML = mazeToText(maze);
-});
