@@ -7,16 +7,19 @@
 
 	<style>
 		#maze-view {
-			font-size: 5px;
-			letter-spacing: 0.7em;
+			font-size: 9px;
+			letter-spacing: 0.04em;
+			line-height: 0.9em;
+			font-weight: bold;
 		}
 	</style>
 
 	<script src="js/maze.js"></script>
+	<script src="wasm_exec.js"></script>
+	<script src="rust/dist/rust.js"></script>
 </head>
 
 <body>
-	<script src="wasm_exec.js"></script>
 	<script>
 		if (!WebAssembly.instantiateStreaming) { // polyfill
 			WebAssembly.instantiateStreaming = async (resp, importObject) => {
@@ -34,6 +37,12 @@
 			//document.getElementById("runButton").disabled = false;
 		});
 
+		const { gen_maze_rust_silent } = wasm_bindgen;
+
+		wasm_bindgen('rust/dist/rust_bg.wasm').then(() => {
+			console.log("WASM Rust Initialized");
+		});
+
 		async function run() {
 			console.clear();
 			await go.run(inst);
@@ -45,11 +54,13 @@
 		<button id="gen-button-js">Generate with JS</button>
 		<button id="gen-button-go">Generate with Go</button>
 		<button id="gen-button-go-silent">Generate with Go (Calculation Only)</button>
+		<button id="gen-button-rust-silent">Generate with Rust (Calculation Only)</button>
 		<span id="gen-timing-result">0</span>ms
 	</div>
 	<div>
 		<button id="bench-button-js">Benchmark with JS</button>
 		<button id="bench-button-go">Benchmark with Go</button>
+		<button id="bench-button-rust" disabled>Benchmark with Rust (too slow!)</button>
 		Rep <span id="rep-num">0</span>/<span id="rep-total">0</span>.
 		Average time: <span id="bench-timing-result">0</span>ms.
 	</div>
@@ -58,7 +69,7 @@
 	<pre id="maze-view"></pre>
 	
 	<script>
-		const size = 60;
+		const size = 100;
 		const reps = 1000;
 
 		function updateTimeDisplay(start, end) {
@@ -104,6 +115,13 @@
 			});
 		});
 
+		document.querySelector('#gen-button-rust-silent').addEventListener('click', () => {
+			const start = performance.now();
+			gen_maze_rust_silent(size, size);
+			const end = performance.now();
+			updateTimeDisplay(start, end);
+		});
+
 		document.querySelector('#bench-button-js').addEventListener('click', () => {
 			timeReps(reps, () => {
 				return new Promise(resolve => {
@@ -124,6 +142,17 @@
 						const end = performance.now();
 						resolve(end - start);
 					});
+				});
+			});
+		});
+
+		document.querySelector('#bench-button-rust').addEventListener('click', () => {
+			timeReps(reps, () => {
+				return new Promise(resolve => {
+					const start = performance.now();
+					gen_maze_rust_silent(size, size);
+					const end = performance.now();
+					resolve(end - start);
 				});
 			});
 		});
